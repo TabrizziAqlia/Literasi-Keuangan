@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Literasi Keuangan Generasi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="sidebar" class="fixed top-0 left-0 h-full w-64 bg-white shadow-xl p-4 z-30 transform -translate-x-full lg:translate-x-0 transition-transform duration-300">
+        <h1 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+            <svg class="w-6 h-6 mr-2 text-blue-600" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2v-4a2 2 0 002-2h2a2 2 0 002-2V4h2a2 2 0 00-2-2H4z" clip-rule="evenodd"></path></svg>
+            FinLiterasi
+        </h1>
+        
+        <div class="space-y-2 text-gray-700">
+            <div id="nav-dashboard" class="nav-item active" onclick="switchView('dashboard')">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-2v2m-4-2v2M4 16h16a2 2 0 002-2V7a2 2 0 00-2-2H4a2 2 0 00-2 2v7a2 2 0 002 2z"></path></svg>
+                Dashboard
+            </div>
+            <div id="nav-transactions" class="nav-item" onclick="switchView('transactions')">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8v4m-3 2h6m-3 6a9 9 0 110-18 9 9 0 010 18z"></path></svg>
+                Anggaran & Transaksi
+            </div>
+            <div id="nav-savings" class="nav-item" onclick="switchView('savings')">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                Tabungan & Tujuan
+            </div>
+        </div>
+
+        <div class="absolute bottom-4 left-4 right-4 p-4 bg-gray-100 rounded-lg">
+            <p class="text-xs text-gray-500 mb-1">ID Pengguna (untuk kolaborasi):</p>
+            <p id="user-id-display" class="text-sm font-mono break-all text-gray-800">Memuat...</p>
+        </div>
+    </div>
+
+    <button id="menu-button" class="lg:hidden fixed top-4 left-4 z-40 p-2 bg-blue-600 text-white rounded-full shadow-lg">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+    </button>
+    
+    <div id="main-content" class="main-content lg:ml-64 p-4 min-h-screen">
+        <div class="container-wrapper">
+            
+            <div id="app-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center p-4">
+                <div class="bg-white p-6 rounded-xl shadow-2xl w-full max-w-sm md:max-w-lg">
+                    <h3 id="modal-title" class="text-xl font-semibold text-gray-800 mb-3">Pesan</h3>
+                    <div id="modal-message-container" class="text-gray-600 mb-4 overflow-y-auto max-h-96">
+                        <p id="modal-message">Isi pesan...</p>
+                    </div>
+                    <button onclick="closeModal()" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition">Tutup</button>
+                </div>
+            </div>
+
+            <header class="block lg:hidden mb-6">
+                <h2 class="text-3xl font-extrabold text-gray-900">Dashboard Keuangan</h2>
+            </header>
+
+            <div id="loading-overlay" class="fixed inset-0 bg-white bg-opacity-75 z-40 flex items-center justify-center">
+                <div class="flex flex-col items-center">
+                    <div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
+                    <p class="mt-4 text-lg text-gray-700">Memuat data...</p>
+                </div>
+            </div>
+
+            <div id="view-dashboard" class="view">
+                <h2 class="text-3xl font-extrabold text-gray-900 mb-6">Dashboard Ringkasan</h2>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-blue-500">
+                        <p class="text-sm font-medium text-gray-500">Saldo Akhir</p>
+                        <p id="total-saldo" class="text-3xl font-bold text-gray-900 mt-1">Rp 0</p>
+                        <p class="text-xs text-gray-400 mt-2">Pemasukan - Pengeluaran</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-green-500">
+                        <p class="text-sm font-medium text-gray-500">Total Pemasukan</p>
+                        <p id="total-pemasukan" class="text-3xl font-bold text-green-600 mt-1">Rp 0</p>
+                        <p class="text-xs text-gray-400 mt-2">Bulan Ini</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-red-500">
+                        <p class="text-sm font-medium text-gray-500">Total Pengeluaran</p>
+                        <p id="total-pengeluaran" class="text-3xl font-bold text-red-600 mt-1">Rp 0</p>
+                        <p class="text-xs text-gray-400 mt-2">Bulan Ini</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-indigo-500">
+                        <p class="text-sm font-medium text-gray-500">Target Tabungan</p>
+                        <p id="total-alokasi-tabungan" class="text-3xl font-bold text-indigo-600 mt-1">Rp 0</p>
+                        <p class="text-xs text-gray-400 mt-2">Sesuai Anggaran (20%)</p>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                    
+                    <div class="lg:col-span-1 p-6 rounded-xl shadow-lg border-4 transition duration-300" id="anti-fomo-card">
+                        <h3 class="text-xl font-extrabold mb-2 flex items-center text-gray-800">
+                            <svg class="w-6 h-6 mr-2 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                            MODE ANTI-FOMO
+                        </h3>
+                        <p class="text-sm text-gray-600 mb-4" id="fomo-status-message">
+                            Memuat status risiko Gaya Hidup Anda...
+                        </p>
+                        <p class="text-4xl font-black text-center mb-4" id="fomo-risk-score">--</p>
+                        
+                        <div id="fomo-risk-level" class="text-center p-2 rounded-full font-semibold text-white mb-4">RISIKO: AMAN</div>
+
+                        <button onclick="showFomoTips()" class="w-full py-2 rounded-lg text-white font-semibold transition bg-blue-600 hover:bg-blue-700">
+                            Lihat Tips Mengatasi FOMO
+                        </button>
+                    </div>
+                    
+                    <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-lg">
+                        <h3 class="text-xl font-semibold mb-4 text-gray-800 flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-4m-4 4v-8m4 4h.01M9 17h.01M4 17h.01M16 17h.01M19 17h.01M12 17v-4m4 4v-8M4 12h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v6a1 1 0 001 1zm0 5h16a1 1 0 001-1v-4a1 1 0 00-1-1H4a1 1 0 00-1 1v4a1 1 0 001 1z"></path></svg>
+                            Analisis Laporan Keuangan
+                        </h3>
+                        <p id="financial-analysis" class="text-gray-700 italic">
+                            Analisis akan muncul di sini setelah Anda memasukkan data Pemasukan dan Pengeluaran.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                    
+                    <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-lg">
+                        <h3 class="text-xl font-semibold mb-4 text-gray-800">Alokasi Ideal 50/30/10/10</h3>
+                        <div class="h-64 flex items-center justify-center">
+                            <canvas id="idealBudgetChart"></canvas>
+                        </div>
+                        <div class="mt-4 space-y-2 text-sm">
+                            <p class="flex justify-between">Kebutuhan (50%) <span class="font-semibold text-blue-600" id="ideal-kebutuhan">Rp 0</span></p>
+                            <p class="flex justify-between">Gaya Hidup (30%) <span class="font-semibold text-amber-600" id="ideal-gayahidup">Rp 0</span></p>
+                            <p class="flex justify-between">Tabungan (10%) <span class="font-semibold text-green-600" id="ideal-tabungan">Rp 0</span></p>
+                            <p class="flex justify-between">Investasi (10%) <span class="font-semibold text-indigo-600" id="ideal-investasi">Rp 0</span></p>
+                        </div>
+                    </div>
+
+                    <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-lg">
+                        <h3 class="text-xl font-semibold mb-4 text-gray-800">Realisasi Pengeluaran vs Target (Bulan Ini)</h3>
+                        <div class="h-96">
+                            <canvas id="realizationChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1">
+                    
+                    <div class="bg-white p-6 rounded-xl shadow-lg">
+                        <h3 class="text-xl font-semibold mb-4 text-gray-800 flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                            Peringatan Cepat (Reminder)
+                        </h3>
+                        <div id="quick-alerts" class="space-y-3">
+                            <div id="alert-dana-darurat" class="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm">
+                                <span class="font-semibold text-blue-700">Dana Darurat:</span> Menunggu Data Gaji.
+                            </div>
+                            <div id="alert-gaya-hidup" class="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm">
+                                <span class="font-semibold text-blue-700">Gaya Hidup:</span> Menunggu Data Anggaran.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="view-transactions" class="view hidden">
+                <h2 class="text-3xl font-extrabold text-gray-900 mb-6">Anggaran & Transaksi</h2>
+                
+                <div class="bg-white p-6 rounded-xl shadow-lg mb-8">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Pengaturan Profil & Anggaran</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="col-span-1">
+                            <label for="monthly-income" class="block text-sm font-medium text-gray-700">Pemasukan Bulanan Bersih (Rp)</label>
+                            <input type="number" id="monthly-income" class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Contoh: 10000000">
+                        </div>
+                        <div class="col-span-1">
+                            <label for="emergency-months" class="block text-sm font-medium text-gray-700">Target Dana Darurat (Bulan Gaji)</label>
+                            <input type="number" id="emergency-months" class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500" value="6" min="1" max="12">
+                        </div>
+                        <div class="col-span-1 flex items-end">
+                            <button onclick="saveProfile()" class="w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition">Simpan Profil & Anggaran</button>
+                        </div>
+                    </div>
+
+                    <div id="budget-summary" class="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                        <p class="font-semibold text-blue-700 mb-2">Alokasi Anggaran Ideal (50/30/10/10):</p>
+                        <div class="grid grid-cols-2 gap-2 text-sm">
+                            <p>Kebutuhan (50%): <span id="budget-needs" class="font-mono">Rp 0</span></p>
+                            <p>Tabungan (10%): <span id="budget-savings" class="font-mono">Rp 0</span></p>
+                            <p>Gaya Hidup (30%): <span id="budget-wants" class="font-mono">Rp 0</span></p>
+                            <p>Investasi (10%): <span id="budget-invest" class="font-mono">Rp 0</span></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-lg mb-8">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Catat Transaksi Baru</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                        <div>
+                            <label for="transaction-type" class="block text-sm font-medium text-gray-700">Tipe</label>
+                            <select id="transaction-type" class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="expense">Pengeluaran</option>
+                                <option value="income">Pemasukan</option>
+                                <option value="saving">Tabungan / Investasi</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="transaction-category" class="block text-sm font-medium text-gray-700">Kategori</label>
+                            <select id="transaction-category" class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500">
+                                </select>
+                        </div>
+                        <div>
+                            <label for="transaction-amount" class="block text-sm font-medium text-gray-700">Jumlah (Rp)</label>
+                            <input type="number" id="transaction-amount" class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Contoh: 500000">
+                        </div>
+                        <div>
+                            <label for="transaction-description" class="block text-sm font-medium text-gray-700">Deskripsi</label>
+                            <input type="text" id="transaction-description" class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Contoh: Belanja Bulanan">
+                        </div>
+                    </div>
+                    <button onclick="addTransaction()" class="mt-4 w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition">Tambahkan Transaksi</button>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-lg">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Daftar Transaksi Bulan Ini</h3>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Deskripsi</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipe</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kategori</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah (Rp)</th>
+                                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transactions-list" class="bg-white divide-y divide-gray-200">
+                                </tbody>
+                        </table>
+                    </div>
+                    <p id="no-transactions-message" class="text-center text-gray-500 mt-4 hidden">Belum ada transaksi bulan ini.</p>
+                </div>
+            </div>
+
+            <div id="view-savings" class="view hidden">
+                <h2 class="text-3xl font-extrabold text-gray-900 mb-6">Tabungan & Tujuan Finansial</h2>
+                
+                <div class="bg-white p-6 rounded-xl shadow-lg mb-8">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Status Dana Darurat</h3>
+                    <div class="flex items-center space-x-4">
+                        <div class="w-24 h-24 flex items-center justify-center rounded-full border-4 border-red-200" id="emergency-ring">
+                            <span id="emergency-percentage" class="text-xl font-bold text-gray-700">0%</span>
+                        </div>
+                        <div class="flex-grow">
+                            <p class="text-lg font-medium text-gray-700">Dana Terkumpul: <span id="emergency-current" class="font-bold text-green-600">Rp 0</span></p>
+                            <p class="text-lg font-medium text-gray-700">Target Ideal (<span id="emergency-months-target">6</span> Bulan Gaji): <span id="emergency-target" class="font-bold text-red-600">Rp 0</span></p>
+                            <p id="emergency-status" class="mt-2 p-2 bg-yellow-100 text-yellow-800 rounded-lg text-sm">Target belum terpenuhi. Terus tingkatkan tabungan Anda!</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-lg">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Tujuan Tabungan Lain (Future Feature)</h3>
+                    <div class="p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                        <p class="text-gray-600">Fitur ini akan segera hadir. Di masa depan, Anda dapat mencatat dan melacak tujuan tabungan spesifik seperti membeli rumah, mobil, atau biaya pendidikan anak. Data tabungan (10%) dan investasi (10%) dari transaksi saat ini sudah dihitung dan disiapkan untuk fitur ini.</p>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+    
+    <script type="module" src="app.js"></script>
+    
+</body>
+</html>
