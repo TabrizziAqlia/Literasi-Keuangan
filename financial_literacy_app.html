@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Literasi Keuangan Generasi</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN for charts and graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+    <!-- Lucide Icons (React uses a separate library, but we'll use inline SVG/icons here if needed) -->
+    <style>
+        /* Menggunakan font Inter secara default */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f9fb;
+        }
+
+        /* Styling dasar untuk tampilan dashboard */
+        .container-wrapper {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+        .main-content {
+            transition: margin-left 0.3s;
+        }
+        .nav-item.active {
+            background-color: #3b82f6; /* Tailwind blue-500 */
+            color: white;
+            font-weight: 600;
+        }
+        .nav-item {
+            cursor: pointer;
+            padding: 0.75rem 1rem;
+            display: flex;
+            align-items: center;
+            border-radius: 0.5rem;
+            transition: all 0.2s;
+        }
+        .nav-item:hover {
+            background-color: #e0f2fe; /* Tailwind blue-100 */
+        }
+
+        /* Skema Warna Kategori (Pastikan warna ini konsisten di JS Chart) */
+        .color-primer-kebutuhan { background-color: #3b82f6; } /* Biru */
+        .color-primer-gaya-hidup { background-color: #f59e0b; } /* Kuning/Amber */
+        .color-primer-tabungan { background-color: #10b981; } /* Hijau */
+        .color-primer-investasi { background-color: #6366f1; } /* Indigo */
+        .color-primer-dana-darurat { background-color: #ef4444; } /* Merah */
+        .color-primer-pemasukan { background-color: #059669; } /* Hijau gelap */
+
+        /* Custom scrollbar for better look */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        
+        /* New Styles for Anti-FOMO Card */
+        .fomo-safe { border-color: #10b981; background-color: #ecfdf5; }
+        .fomo-warning { border-color: #f59e0b; background-color: #fffbeb; }
+        .fomo-critical { border-color: #ef4444; background-color: #fef2f2; }
+    </style>
+</head>
+<body>
+
+    <!-- SIDEBAR (Navigation) -->
+    <div id="sidebar" class="fixed top-0 left-0 h-full w-64 bg-white shadow-xl p-4 z-30 transform -translate-x-full lg:translate-x-0 transition-transform duration-300">
+        <h1 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+            <svg class="w-6 h-6 mr-2 text-blue-600" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2v-4a2 2 0 002-2h2a2 2 0 002-2V4h2a2 2 0 00-2-2H4z" clip-rule="evenodd"></path></svg>
+            FinLiterasi
+        </h1>
+        
+        <div class="space-y-2 text-gray-700">
+            <div id="nav-dashboard" class="nav-item active" onclick="switchView('dashboard')">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-2v2m-4-2v2M4 16h16a2 2 0 002-2V7a2 2 0 00-2-2H4a2 2 0 00-2 2v7a2 2 0 002 2z"></path></svg>
+                Dashboard
+            </div>
+            <div id="nav-transactions" class="nav-item" onclick="switchView('transactions')">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8v4m-3 2h6m-3 6a9 9 0 110-18 9 9 0 010 18z"></path></svg>
+                Anggaran & Transaksi
+            </div>
+            <div id="nav-savings" class="nav-item" onclick="switchView('savings')">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                Tabungan & Tujuan
+            </div>
+        </div>
+
+        <!-- User Info (Placeholder, will be updated by JS) -->
+        <div class="absolute bottom-4 left-4 right-4 p-4 bg-gray-100 rounded-lg">
+            <p class="text-xs text-gray-500 mb-1">ID Pengguna (untuk kolaborasi):</p>
+            <p id="user-id-display" class="text-sm font-mono break-all text-gray-800">Memuat...</p>
+        </div>
+    </div>
+
+    <!-- MOBILE MENU BUTTON -->
+    <button id="menu-button" class="lg:hidden fixed top-4 left-4 z-40 p-2 bg-blue-600 text-white rounded-full shadow-lg">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+    </button>
+    
+    <!-- MAIN CONTENT AREA -->
+    <div id="main-content" class="main-content lg:ml-64 p-4 min-h-screen">
+        <div class="container-wrapper">
+            
+            <!-- Modal for Alerts/Feedback (Custom implementation for no alert()) -->
+            <div id="app-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center p-4">
+                <div class="bg-white p-6 rounded-xl shadow-2xl w-full max-w-sm md:max-w-lg">
+                    <h3 id="modal-title" class="text-xl font-semibold text-gray-800 mb-3">Pesan</h3>
+                    <div id="modal-message-container" class="text-gray-600 mb-4 overflow-y-auto max-h-96">
+                        <p id="modal-message">Isi pesan...</p>
+                    </div>
+                    <button onclick="closeModal()" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition">Tutup</button>
+                </div>
+            </div>
+
+            <!-- Header (Hanya untuk mobile, di desktop hilang karena sidebar) -->
+            <header class="block lg:hidden mb-6">
+                <h2 class="text-3xl font-extrabold text-gray-900">Dashboard Keuangan</h2>
+            </header>
+
+            <!-- Loading Spinner (Visible while Firebase is loading) -->
+            <div id="loading-overlay" class="fixed inset-0 bg-white bg-opacity-75 z-40 flex items-center justify-center">
+                <div class="flex flex-col items-center">
+                    <div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
+                    <p class="mt-4 text-lg text-gray-700">Memuat data...</p>
+                </div>
+            </div>
+
+            <!-- Dashboard View -->
+            <div id="view-dashboard" class="view">
+                <h2 class="text-3xl font-extrabold text-gray-900 mb-6">Dashboard Ringkasan</h2>
+
+                <!-- 1. Ringkasan Keuangan Utama (4 Cards) -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <!-- Saldo Akhir -->
+                    <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-blue-500">
+                        <p class="text-sm font-medium text-gray-500">Saldo Akhir</p>
+                        <p id="total-saldo" class="text-3xl font-bold text-gray-900 mt-1">Rp 0</p>
+                        <p class="text-xs text-gray-400 mt-2">Pemasukan - Pengeluaran</p>
+                    </div>
+                    <!-- Total Pemasukan -->
+                    <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-green-500">
+                        <p class="text-sm font-medium text-gray-500">Total Pemasukan</p>
+                        <p id="total-pemasukan" class="text-3xl font-bold text-green-600 mt-1">Rp 0</p>
+                        <p class="text-xs text-gray-400 mt-2">Bulan Ini</p>
+                    </div>
+                    <!-- Total Pengeluaran -->
+                    <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-red-500">
+                        <p class="text-sm font-medium text-gray-500">Total Pengeluaran</p>
+                        <p id="total-pengeluaran" class="text-3xl font-bold text-red-600 mt-1">Rp 0</p>
+                        <p class="text-xs text-gray-400 mt-2">Bulan Ini</p>
+                    </div>
+                    <!-- Total Tabungan & Investasi -->
+                    <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-indigo-500">
+                        <p class="text-sm font-medium text-gray-500">Target Tabungan</p>
+                        <p id="total-alokasi-tabungan" class="text-3xl font-bold text-indigo-600 mt-1">Rp 0</p>
+                        <p class="text-xs text-gray-400 mt-2">Sesuai Anggaran (20%)</p>
+                    </div>
+                </div>
+                
+                <!-- 2. MODE ANTI-FOMO & Analisis Laporan Keuangan (Grid 2:1) -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                    
+                    <!-- MODE ANTI-FOMO -->
+                    <div class="lg:col-span-1 p-6 rounded-xl shadow-lg border-4 transition duration-300" id="anti-fomo-card">
+                        <h3 class="text-xl font-extrabold mb-2 flex items-center text-gray-800">
+                            <svg class="w-6 h-6 mr-2 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                            MODE ANTI-FOMO
+                        </h3>
+                        <p class="text-sm text-gray-600 mb-4" id="fomo-status-message">
+                            Memuat status risiko Gaya Hidup Anda...
+                        </p>
+                        <p class="text-4xl font-black text-center mb-4" id="fomo-risk-score">--</p>
+                        
+                        <div id="fomo-risk-level" class="text-center p-2 rounded-full font-semibold text-white mb-4">RISIKO: AMAN</div>
+
+                        <button onclick="showFomoTips()" class="w-full py-2 rounded-lg text-white font-semibold transition bg-blue-600 hover:bg-blue-700">
+                            Lihat Tips Mengatasi FOMO
+                        </button>
+                    </div>
+                    
+                    <!-- Analisis Laporan Keuangan -->
+                    <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-lg">
+                        <h3 class="text-xl font-semibold mb-4 text-gray-800 flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-4m-4 4v-8m4 4h.01M9 17h.01M4 17h.01M16 17h.01M19 17h.01M12 17v-4m4 4v-8M4 12h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v6a1 1 0 001 1zm0 5h16a1 1 0 001-1v-4a1 1 0 00-1-1H4a1 1 0 00-1 1v4a1 1 0 001 1z"></path></svg>
+                            Analisis Laporan Keuangan
+                        </h3>
+                        <p id="financial-analysis" class="text-gray-700 italic">
+                            Analisis akan muncul di sini setelah Anda memasukkan data Pemasukan dan Pengeluaran.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 3. Diagram Aliran Uang & Budgeting -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                    
+                    <!-- Diagram Donut (50/30/10/10 Ideal) -->
+                    <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-lg">
+                        <h3 class="text-xl font-semibold mb-4 text-gray-800">Alokasi Ideal 50/30/10/10</h3>
+                        <div class="h-64 flex items-center justify-center">
+                            <canvas id="idealBudgetChart"></canvas>
+                        </div>
+                        <div class="mt-4 space-y-2 text-sm">
+                            <p class="flex justify-between">Kebutuhan (50%) <span class="font-semibold text-blue-600" id="ideal-kebutuhan">Rp 0</span></p>
+                            <p class="flex justify-between">Gaya Hidup (30%) <span class="font-semibold text-amber-600" id="ideal-gayahidup">Rp 0</span></p>
+                            <p class="flex justify-between">Tabungan (10%) <span class="font-semibold text-green-600" id="ideal-tabungan">Rp 0</span></p>
+                            <p class="flex justify-between">Investasi (10%) <span class="font-semibold text-indigo-600" id="ideal-investasi">Rp 0</span></p>
+                        </div>
+                    </div>
+
+                    <!-- Diagram Bar (Realisasi vs Target Budget) -->
+                    <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-lg">
+                        <h3 class="text-xl font-semibold mb-4 text-gray-800">Realisasi Pengeluaran vs Target (Bulan Ini)</h3>
+                        <div class="h-96">
+                            <canvas id="realizationChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. Notifikasi dan Peringatan Cepat -->
+                <div class="grid grid-cols-1">
+                    
+                    <!-- Notifikasi dan Peringatan Cepat -->
+                    <div class="bg-white p-6 rounded-xl shadow-lg">
+                        <h3 class="text-xl font-semibold mb-4 text-gray-800 flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                            Peringatan Cepat (Reminder)
+                        </h3>
+                        <div id="quick-alerts" class="space-y-3">
+                            <div id="alert-dana-darurat" class="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm">
+                                <span class="font-semibold text-blue-700">Dana Darurat:</span> Menunggu Data Gaji.
+                            </div>
+                            <div id="alert-gaya-hidup" class="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm">
+                                <span class="font-semibold text-blue-700">Gaya Hidup:</span> Menunggu Data Anggaran.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Transactions & Budgeting View (Lanjutan dari sebelumnya, tidak diubah) -->
+            <div id="view-transactions" class="view hidden">
+                <h2 class="text-3xl font-extrabold text-gray-900 mb-6">Anggaran & Transaksi</h2>
+                
+                <!-- 1. Form Profil dan Anggaran 50/30/10/10 -->
+                <div class="bg-white p-6 rounded-xl shadow-lg mb-8">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Pengaturan Profil & Anggaran</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="col-span-1">
+                            <label for="monthly-income" class="block text-sm font-medium text-gray-700">Pemasukan Bulanan Bersih (Rp)</label>
+                            <input type="number" id="monthly-income" class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Contoh: 10000000">
+                        </div>
+                        <div class="col-span-1">
+                            <label for="emergency-months" class="block text-sm font-medium text-gray-700">Target Dana Darurat (Bulan Gaji)</label>
+                            <input type="number" id="emergency-months" class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500" value="6" min="1" max="12">
+                        </div>
+                        <div class="col-span-1 flex items-end">
+                            <button onclick="saveProfile()" class="w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition">Simpan Profil & Anggaran</button>
+                        </div>
+                    </div>
+
+                    <div id="budget-summary" class="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                        <p class="font-semibold text-blue-700 mb-2">Alokasi Anggaran Ideal (50/30/10/10):</p>
+                        <div class="grid grid-cols-2 gap-2 text-sm">
+                            <p>Kebutuhan (50%): <span id="budget-needs" class="font-mono">Rp 0</span></p>
+                            <p>Tabungan (10%): <span id="budget-savings" class="font-mono">Rp 0</span></p>
+                            <p>Gaya Hidup (30%): <span id="budget-wants" class="font-mono">Rp 0</span></p>
+                            <p>Investasi (10%): <span id="budget-invest" class="font-mono">Rp 0</span></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Form Input Transaksi -->
+                <div class="bg-white p-6 rounded-xl shadow-lg mb-8">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Catat Transaksi Baru</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                        <div>
+                            <label for="transaction-type" class="block text-sm font-medium text-gray-700">Tipe</label>
+                            <select id="transaction-type" class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="expense">Pengeluaran</option>
+                                <option value="income">Pemasukan</option>
+                                <option value="saving">Tabungan / Investasi</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="transaction-category" class="block text-sm font-medium text-gray-700">Kategori</label>
+                            <select id="transaction-category" class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="kebutuhan">Kebutuhan (50%)</option>
+                                <option value="gaya-hidup">Gaya Hidup (30%)</option>
+                                <option value="tabungan">Tabungan (10%)</option>
+                                <option value="investasi">Investasi (10%)</option>
+                                <option value="dana-darurat">Dana Darurat</option>
+                                <option value="pemasukan">Gaji/Pemasukan</option>
+                                <!-- Kategori akan disaring oleh JS berdasarkan Tipe -->
+                            </select>
+                        </div>
+                        <div>
+                            <label for="transaction-amount" class="block text-sm font-medium text-gray-700">Jumlah (Rp)</label>
+                            <input type="number" id="transaction-amount" class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Contoh: 500000">
+                        </div>
+                        <div>
+                            <label for="transaction-description" class="block text-sm font-medium text-gray-700">Deskripsi</label>
+                            <input type="text" id="transaction-description" class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Contoh: Belanja Bulanan">
+                        </div>
+                    </div>
+                    <button onclick="addTransaction()" class="mt-4 w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition">Tambahkan Transaksi</button>
+                </div>
+
+                <!-- 3. Daftar Transaksi -->
+                <div class="bg-white p-6 rounded-xl shadow-lg">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Daftar Transaksi Bulan Ini</h3>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Deskripsi</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipe</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kategori</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah (Rp)</th>
+                                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transactions-list" class="bg-white divide-y divide-gray-200">
+                                <!-- Transaksi akan dimuat di sini oleh JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <p id="no-transactions-message" class="text-center text-gray-500 mt-4 hidden">Belum ada transaksi bulan ini.</p>
+                </div>
+            </div>
+
+            <!-- Savings & Goals View (Lanjutan dari sebelumnya, tidak diubah) -->
+            <div id="view-savings" class="view hidden">
+                <h2 class="text-3xl font-extrabold text-gray-900 mb-6">Tabungan & Tujuan Finansial</h2>
+                
+                <!-- 1. Status Dana Darurat -->
+                <div class="bg-white p-6 rounded-xl shadow-lg mb-8">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Status Dana Darurat</h3>
+                    <div class="flex items-center space-x-4">
+                        <div class="w-24 h-24 flex items-center justify-center rounded-full border-4 border-red-200" id="emergency-ring">
+                            <span id="emergency-percentage" class="text-xl font-bold text-gray-700">0%</span>
+                        </div>
+                        <div class="flex-grow">
+                            <p class="text-lg font-medium text-gray-700">Dana Terkumpul: <span id="emergency-current" class="font-bold text-green-600">Rp 0</span></p>
+                            <p class="text-lg font-medium text-gray-700">Target Ideal (<span id="emergency-months-target">6</span> Bulan Gaji): <span id="emergency-target" class="font-bold text-red-600">Rp 0</span></p>
+                            <p id="emergency-status" class="mt-2 p-2 bg-yellow-100 text-yellow-800 rounded-lg text-sm">Target belum terpenuhi. Terus tingkatkan tabungan Anda!</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Tujuan Tabungan (Goals) -->
+                <div class="bg-white p-6 rounded-xl shadow-lg">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Tujuan Tabungan Lain (Future Feature)</h3>
+                    <div class="p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                        <p class="text-gray-600">Fitur ini akan segera hadir. Di masa depan, Anda dapat mencatat dan melacak tujuan tabungan spesifik seperti membeli rumah, mobil, atau biaya pendidikan anak. Data tabungan (10%) dan investasi (10%) dari transaksi saat ini sudah dihitung dan disiapkan untuk fitur ini.</p>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+    
+    <!-- JavaScript & Firebase -->
+    <script type="module">
+        // Global variables for Firebase access
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        // Firebase Imports
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, setPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot, collection, query, orderBy, deleteDoc, runTransaction, getDoc, where, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
+        // Configuration
+        setLogLevel('debug'); // Set log level for debugging
+
+        // Firebase Service Instances
+        let app;
+        let db;
+        let auth;
+        let userId = null;
+        let isAuthReady = false;
+
+        // Reactive Data Store
+        let userProfile = {
+            monthlyIncome: 0,
+            emergencyMonths: 6,
+        };
+        let transactions = [];
+        let dashboardData = {
+            income: 0,
+            expense: 0,
+            savings: 0,
+            emergencyFund: 0,
+            needsExpense: 0,
+            wantsExpense: 0,
+            targetEmergency: 0,
+            targetNeeds: 0,
+            targetWants: 0,
+            targetSavings: 0,
+            targetInvest: 0,
+            fomoRiskScore: 0, // NEW: Score untuk Anti-FOMO
+        };
+        
+        // Chart Instances
+        let idealBudgetChartInstance = null;
+        let realizationChartInstance = null;
+
+        // Utility Functions
+        const formatRupiah = (number) => {
+            return new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 0
+            }).format(number);
+        };
+        
+        const showModal = (title, message, isHtml = false) => {
+            document.getElementById('modal-title').textContent = title;
+            const messageEl = document.getElementById('modal-message');
+            if (isHtml) {
+                 // Ganti elemen P menjadi DIV untuk menampung HTML
+                 const containerEl = document.getElementById('modal-message-container');
+                 messageEl.style.display = 'none'; // Sembunyikan P lama
+                 
+                 // Buat elemen baru untuk konten HTML
+                 let htmlContentEl = document.getElementById('modal-html-content');
+                 if (!htmlContentEl) {
+                    htmlContentEl = document.createElement('div');
+                    htmlContentEl.id = 'modal-html-content';
+                    containerEl.insertBefore(htmlContentEl, messageEl.nextSibling); // Sisipkan setelah P
+                 }
+                 htmlContentEl.innerHTML = message;
+                 htmlContentEl.style.display = 'block';
+                 
+            } else {
+                 // Pastikan P terlihat dan bersihkan konten HTML jika ada
+                 const htmlContentEl = document.getElementById('modal-html-content');
+                 if (htmlContentEl) htmlContentEl.remove();
+                 messageEl.style.display = 'block';
+                 messageEl.textContent = message;
+            }
+            document.getElementById('app-modal').classList.remove('hidden');
+            document.getElementById('app-modal').classList.add('flex');
+        };
+
+        window.closeModal = () => {
+            document.getElementById('app-modal').classList.add('hidden');
+            document.getElementById('app-modal').classList.remove('flex');
+        };
+
+        const getProfileDocRef = () => {
+            if (!userId) return null;
+            // Public path: /artifacts/{appId}/public/data/profiles/{userId}
+            return doc(db, 'artifacts', appId, 'public/data', 'profiles', userId);
+        };
+
+        const getTransactionsCollectionRef = () => {
+            if (!userId) return null;
+            // Private path: /artifacts/{appId}/users/{userId}/transactions
+            return collection(db, 'artifacts', appId, 'users', userId, 'transactions');
+        };
+        
+        // --- CORE APPLICATION LOGIC ---
+
+        // 1. Firebase Initialization and Authentication
+        const initFirebase = async () => {
+            try {
+                // Hides loading spinner
+                document.getElementById('loading-overlay').classList.remove('hidden');
+
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                
+                // Set persistence to session to maintain login across refresh
+                await setPersistence(auth, browserSessionPersistence);
+
+                // Sign in with custom token or anonymously if not available
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                // Set up auth state listener
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        document.getElementById('user-id-display').textContent = userId;
+                        isAuthReady = true;
+                        console.log('User signed in with UID:', userId);
+                        
+                        // Start listening to data
+                        setupDataListeners();
+                    } else {
+                        userId = null;
+                        isAuthReady = true; // Still set to true to handle unauthenticated state gracefully
+                        document.getElementById('user-id-display').textContent = 'Anonim';
+                        console.log('User signed out/anonymous.');
+                        
+                        // Clear data if needed
+                        resetAppData();
+                        updateUI();
+                    }
+                    // Hide loading spinner after auth check completes
+                    document.getElementById('loading-overlay').classList.add('hidden');
+                });
+
+            } catch (error) {
+                console.error("Error during Firebase initialization or sign-in:", error);
+                showModal('Kesalahan Fatal', `Gagal menginisialisasi Firebase: ${error.message}. Periksa koneksi Anda.`);
+            }
+        };
+
+        // Resets local data
+        const resetAppData = () => {
+             userProfile = { monthlyIncome: 0, emergencyMonths: 6 };
+             transactions = [];
+             dashboardData = {
+                income: 0, expense: 0, savings: 0, emergencyFund: 0, needsExpense: 0, wantsExpense: 0,
+                targetEmergency: 0, targetNeeds: 0, targetWants: 0, targetSavings: 0, targetInvest: 0, fomoRiskScore: 0,
+             };
+        };
+
+        // 2. Data Listeners (Profile and Transactions)
+        const setupDataListeners = () => {
+            if (!isAuthReady || !userId) return;
+
+            // Listener for User Profile
+            const profileRef = getProfileDocRef();
+            if (profileRef) {
+                onSnapshot(profileRef, (docSnap) => {
+                    if (docSnap.exists()) {
+                        userProfile = { ...userProfile, ...docSnap.data() };
+                        console.log("Profile data loaded:", userProfile);
+                    } else {
+                        console.log("No profile found, using defaults.");
+                        // Save default profile if none exists
+                        saveProfile(true);
+                    }
+                    // Recalculate and update UI after profile load/change
+                    calculateDashboardData();
+                    updateUI();
+                }, (error) => {
+                    console.error("Error listening to profile:", error);
+                    showModal('Kesalahan Data', 'Gagal memuat profil pengguna.');
+                });
+            }
+
+            // Listener for Transactions
+            const transactionsRef = getTransactionsCollectionRef();
+            if (transactionsRef) {
+                const q = query(transactionsRef, orderBy("timestamp", "desc"));
+                onSnapshot(q, (snapshot) => {
+                    transactions = [];
+                    snapshot.forEach((doc) => {
+                        transactions.push({ id: doc.id, ...doc.data() });
+                    });
+                    console.log("Transactions loaded:", transactions.length);
+                    
+                    // Recalculate and update UI after transactions load/change
+                    calculateDashboardData();
+                    updateUI();
+                }, (error) => {
+                    console.error("Error listening to transactions:", error);
+                    showModal('Kesalahan Data', 'Gagal memuat daftar transaksi.');
+                });
+            }
+        };
+        
+        // 3. Calculation Logic
+        const calculateDashboardData = () => {
+            const now = new Date();
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+            const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+
+            let income = 0;
+            let expense = 0;
+            let savings = 0;
+            let emergencyFund = 0;
+            let needsExpense = 0;
+            let wantsExpense = 0;
+
+            const monthlyIncome = userProfile.monthlyIncome || 0;
+            const emergencyMonths = userProfile.emergencyMonths || 6;
+
+            // Filter transactions for the current month and calculate totals
+            transactions.forEach(t => {
+                const txDate = t.timestamp ? (t.timestamp.toDate ? t.timestamp.toDate() : new Date(t.timestamp)) : new Date();
+                
+                // Accumulate totals regardless of month for long-term values (Emergency Fund)
+                if (t.type === 'saving' && t.category === 'dana-darurat') {
+                    emergencyFund += t.amount;
+                }
+
+                // Only consider current month for I/E/S
+                if (txDate >= startOfMonth && txDate <= endOfMonth) {
+                    if (t.type === 'income') {
+                        income += t.amount;
+                    } else if (t.type === 'expense') {
+                        expense += t.amount;
+                        if (t.category === 'kebutuhan') {
+                            needsExpense += t.amount;
+                        } else if (t.category === 'gaya-hidup') {
+                            wantsExpense += t.amount;
+                        }
+                    } else if (t.type === 'saving') {
+                        savings += t.amount;
+                    }
+                }
+            });
+
+            // Calculate Ideal Budget Targets (50/30/10/10)
+            const targetNeeds = monthlyIncome * 0.50;
+            const targetWants = monthlyIncome * 0.30;
+            const targetSavings = monthlyIncome * 0.10; // Tabungan
+            const targetInvest = monthlyIncome * 0.10;  // Investasi
+            
+            // NEW: Calculate FOMO Risk Score (Percentage of Wanna Expense vs Target Wanna)
+            let fomoRiskScore = 0;
+            if (targetWants > 0) {
+                fomoRiskScore = Math.min(150, (wantsExpense / targetWants) * 100);
+            } else if (wantsExpense > 0) {
+                // If no income is set, but there are wants expenses, set a high score
+                fomoRiskScore = 150; 
+            }
+
+            // Update dashboard data store
+            dashboardData = {
+                income: income,
+                expense: expense,
+                savings: savings,
+                emergencyFund: emergencyFund,
+                needsExpense: needsExpense,
+                wantsExpense: wantsExpense,
+                targetEmergency: monthlyIncome * emergencyMonths,
+                targetNeeds: targetNeeds,
+                targetWants: targetWants,
+                targetSavings: targetSavings,
+                targetInvest: targetInvest,
+                fomoRiskScore: fomoRiskScore, // NEW
+            };
+        };
+
+        // 4. Update UI Components
+        const updateUI = () => {
+            // --- Update Profile/Budget View (view-transactions) ---
+            document.getElementById('monthly-income').value = userProfile.monthlyIncome || '';
+            document.getElementById('emergency-months').value = userProfile.emergencyMonths || 6;
+            document.getElementById('budget-needs').textContent = formatRupiah(dashboardData.targetNeeds);
+            document.getElementById('budget-wants').textContent = formatRupiah(dashboardData.targetWants);
+            document.getElementById('budget-savings').textContent = formatRupiah(dashboardData.targetSavings);
+            document.getElementById('budget-invest').textContent = formatRupiah(dashboardData.targetInvest);
+
+            // --- Update Transactions List ---
+            const listEl = document.getElementById('transactions-list');
+            listEl.innerHTML = ''; // Clear previous list
+            
+            const currentMonthTransactions = transactions.filter(t => {
+                const now = new Date();
+                const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+                const txDate = t.timestamp ? (t.timestamp.toDate ? t.timestamp.toDate() : new Date(t.timestamp)) : new Date();
+                return txDate >= startOfMonth;
+            });
+
+            if (currentMonthTransactions.length === 0) {
+                document.getElementById('no-transactions-message').classList.remove('hidden');
+            } else {
+                document.getElementById('no-transactions-message').classList.add('hidden');
+            }
+
+            currentMonthTransactions.forEach(t => {
+                const row = listEl.insertRow();
+                const typeClass = t.type === 'income' ? 'text-green-600 font-semibold' : (t.type === 'saving' ? 'text-indigo-600 font-semibold' : 'text-red-600 font-semibold');
+                const categoryText = t.category.replace(/-/g, ' ').toUpperCase();
+                const dateText = t.timestamp ? (t.timestamp.toDate ? t.timestamp.toDate().toLocaleDateString('id-ID') : new Date(t.timestamp).toLocaleDateString('id-ID')) : '-';
+
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${dateText}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${t.description || '-'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm capitalize ${typeClass}">${t.type}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${categoryText}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-right ${typeClass}">${formatRupiah(t.amount)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button onclick="deleteTransaction('${t.id}')" class="text-red-600 hover:text-red-900 transition">Hapus</button>
+                    </td>
+                `;
+            });
+            
+            // --- Update Dashboard View (view-dashboard) ---
+            const totalBalance = dashboardData.income - dashboardData.expense - dashboardData.savings;
+            document.getElementById('total-saldo').textContent = formatRupiah(totalBalance);
+            document.getElementById('total-pemasukan').textContent = formatRupiah(dashboardData.income);
+            document.getElementById('total-pengeluaran').textContent = formatRupiah(dashboardData.expense + dashboardData.savings);
+            document.getElementById('total-alokasi-tabungan').textContent = formatRupiah(dashboardData.targetSavings + dashboardData.targetInvest);
+
+            document.getElementById('ideal-kebutuhan').textContent = formatRupiah(dashboardData.targetNeeds);
+            document.getElementById('ideal-gayahidup').textContent = formatRupiah(dashboardData.targetWants);
+            document.getElementById('ideal-tabungan').textContent = formatRupiah(dashboardData.targetSavings);
+            document.getElementById('ideal-investasi').textContent = formatRupiah(dashboardData.targetInvest);
+
+            // --- Update Savings View (view-savings) ---
+            const targetEmergency = dashboardData.targetEmergency;
+            const currentEmergency = dashboardData.emergencyFund;
+            const emergencyPercentage = targetEmergency > 0 ? Math.min(100, (currentEmergency / targetEmergency) * 100) : 0;
+            
+            document.getElementById('emergency-months-target').textContent = userProfile.emergencyMonths;
+            document.getElementById('emergency-target').textContent = formatRupiah(targetEmergency);
+            document.getElementById('emergency-current').textContent = formatRupiah(currentEmergency);
+            document.getElementById('emergency-percentage').textContent = `${Math.round(emergencyPercentage)}%`;
+            
+            const emergencyRing = document.getElementById('emergency-ring');
+            emergencyRing.style.backgroundImage = `conic-gradient(#10b981 ${emergencyPercentage}%, #f3f4f6 ${emergencyPercentage}%)`;
+            
+            const emergencyStatusEl = document.getElementById('emergency-status');
+            if (targetEmergency === 0) {
+                 emergencyStatusEl.className = 'mt-2 p-2 bg-blue-100 text-blue-800 rounded-lg text-sm';
+                 emergencyStatusEl.textContent = 'Harap masukkan Pemasukan Bulanan Bersih dan Target Bulan Gaji Anda di tab Anggaran.';
+            } else if (emergencyPercentage >= 100) {
+                emergencyStatusEl.className = 'mt-2 p-2 bg-green-100 text-green-800 rounded-lg text-sm';
+                emergencyStatusEl.textContent = 'Selamat! Dana Darurat Anda telah terpenuhi!';
+            } else {
+                emergencyStatusEl.className = 'mt-2 p-2 bg-yellow-100 text-yellow-800 rounded-lg text-sm';
+                emergencyStatusEl.textContent = `Anda telah mencapai ${Math.round(emergencyPercentage)}% dari target. Terus tingkatkan tabungan! Kurang ${formatRupiah(targetEmergency - currentEmergency)} lagi.`;
+            }
+            
+            // --- Update Anti-FOMO Mode ---
+            updateAntiFomoMode();
+
+            // --- Update Analysis and Alerts ---
+            updateAnalysisAndAlerts(totalBalance);
+
+            // --- Redraw Charts ---
+            drawIdealBudgetChart();
+            drawRealizationChart();
+        };
+
+        // 5. Analysis and Alerts Logic
+        const updateAnalysisAndAlerts = (totalBalance) => {
+            const analysisEl = document.getElementById('financial-analysis');
+            const alertDanaDaruratEl = document.getElementById('alert-dana-darurat');
+            const alertGayaHidupEl = document.getElementById('alert-gaya-hidup');
+            
+            const income = dashboardData.income;
+            const needsExpense = dashboardData.needsExpense;
+            const wantsExpense = dashboardData.wantsExpense;
+            const targetNeeds = dashboardData.targetNeeds;
+            const targetWants = dashboardData.targetWants;
+            const emergencyPercentage = dashboardData.targetEmergency > 0 ? (dashboardData.emergencyFund / dashboardData.targetEmergency) : 0;
+            
+            let analysisText = "";
+
+            if (income === 0) {
+                analysisText = "Harap masukkan data Pemasukan Bulanan Anda di tab Anggaran & Transaksi untuk memulai Analisis Keuangan.";
+            } else {
+                // Analisis Likuiditas
+                const cashFlow = totalBalance;
+                
+                // Analisis Budgeting (50/30)
+                const needsDiff = needsExpense - targetNeeds;
+                const wantsDiff = wantsExpense - targetWants;
+
+                analysisText += `Aliran Kas (Cash Flow) Anda bulan ini adalah **${formatRupiah(cashFlow)}**. `;
+                
+                if (cashFlow > 0) {
+                    analysisText += "Ini menunjukkan Anda memiliki surplus! Pertimbangkan untuk mengalokasikannya ke tabungan atau investasi. ";
+                } else if (cashFlow < 0) {
+                    analysisText += "Anda mengalami defisit. Segera tinjau ulang pengeluaran Anda. ";
+                } else {
+                    analysisText += "Aliran kas Anda netral (nol). ";
+                }
+
+                analysisText += "\n\n**Tinjauan Anggaran (50/30):**\n";
+                
+                // Kebutuhan (50%)
+                if (needsDiff > 0) {
+                    analysisText += `Anda menghabiskan **${formatRupiah(needsDiff)}** lebih banyak untuk Kebutuhan (50%) dari target ideal Anda. `;
+                } else if (needsDiff < 0) {
+                    analysisText += `Anda hemat **${formatRupiah(Math.abs(needsDiff))}** pada Kebutuhan (50%), ini bagus! `;
+                } else {
+                    analysisText += `Pengeluaran Kebutuhan Anda pas sesuai target. `;
+                }
+
+                // Gaya Hidup (30%)
+                if (wantsDiff > 0) {
+                    analysisText += `**Waspada!** Pengeluaran Gaya Hidup (30%) Anda melebihi target sebesar **${formatRupiah(wantsDiff)}**. Ini adalah area pertama yang harus dipotong.`;
+                } else if (wantsDiff < 0) {
+                    analysisText += `Pengeluaran Gaya Hidup Anda di bawah target, ini menunjukkan disiplin yang baik.`;
+                } else {
+                    analysisText += `Pengeluaran Gaya Hidup Anda pas sesuai target.`;
+                }
+
+                analysisEl.innerHTML = analysisText.replace(/\n\n/g, '<br><br>');
+            }
+            
+            // --- Update Alerts ---
+            
+            // Alert Dana Darurat
+            alertDanaDaruratEl.className = 'p-3 rounded-lg text-sm';
+            if (emergencyPercentage === 0) {
+                alertDanaDaruratEl.classList.add('bg-blue-50', 'border-blue-200');
+                alertDanaDaruratEl.innerHTML = `<span class="font-semibold text-blue-700">Dana Darurat:</span> Target belum ditentukan/terkumpul. Mulailah mengalokasikan 10% gaji Anda segera.`;
+            } else if (emergencyPercentage >= 1) {
+                alertDanaDaruratEl.classList.add('bg-green-50', 'border-green-200');
+                alertDanaDaruratEl.innerHTML = `<span class="font-semibold text-green-700">Dana Darurat:</span> Selamat, Target Anda (${userProfile.emergencyMonths} bulan) **Telah TERCAPAI!**`;
+            } else if (emergencyPercentage >= 0.5) {
+                alertDanaDaruratEl.classList.add('bg-yellow-50', 'border-yellow-200');
+                alertDanaDaruratEl.innerHTML = `<span class="font-semibold text-yellow-700">Dana Darurat:</span> **Hampir Capai Target!** Anda sudah di ${Math.round(emergencyPercentage * 100)}%. Sedikit lagi!`;
+            } else {
+                alertDanaDaruratEl.classList.add('bg-red-50', 'border-red-200');
+                alertDanaDaruratEl.innerHTML = `<span class="font-semibold text-red-700">Dana Darurat:</span> **Di Bawah 50%**. Prioritaskan alokasi Dana Darurat Anda!`;
+            }
+            
+            // Alert Gaya Hidup
+            alertGayaHidupEl.className = 'p-3 rounded-lg text-sm';
+            if (targetWants === 0) {
+                alertGayaHidupEl.classList.add('bg-blue-50', 'border-blue-200');
+                alertGayaHidupEl.innerHTML = `<span class="font-semibold text-blue-700">Gaya Hidup:</span> Masukkan Pemasukan Bulanan untuk melihat target 30%.`;
+            } else if (wantsExpense > targetWants) {
+                alertGayaHidupEl.classList.add('bg-red-50', 'border-red-200');
+                alertGayaHidupEl.innerHTML = `<span class="font-semibold text-red-700">Gaya Hidup:</span> **LEBIH BATAS!** Pengeluaran Gaya Hidup Anda melampaui ${formatRupiah(targetWants)}.`;
+            } else if (wantsExpense > targetWants * 0.9) {
+                alertGayaHidupEl.classList.add('bg-yellow-50', 'border-yellow-200');
+                alertGayaHidupEl.innerHTML = `<span class="font-semibold text-yellow-700">Gaya Hidup:</span> **Hampir Batas!** Pengeluaran Anda sudah ${Math.round((wantsExpense/targetWants) * 100)}% dari target.`;
+            } else {
+                alertGayaHidupEl.classList.add('bg-green-50', 'border-green-200');
+                alertGayaHidupEl.innerHTML = `<span class="font-semibold text-green-700">Gaya Hidup:</span> **Aman!** Pengeluaran Anda masih dalam batas ideal.`;
+            }
+        };
+
+        // 6. Anti-FOMO Mode Logic (NEW)
+        const updateAntiFomoMode = () => {
+            const cardEl = document.getElementById('anti-fomo-card');
+            const scoreEl = document.getElementById('fomo-risk-score');
+            const statusEl = document.getElementById('fomo-risk-level');
+            const messageEl = document.getElementById('fomo-status-message');
+            
+            const score = dashboardData.fomoRiskScore;
+            
+            // Reset classes
+            cardEl.className = 'lg:col-span-1 p-6 rounded-xl shadow-lg border-4 transition duration-300';
+            statusEl.className = 'text-center p-2 rounded-full font-semibold text-white mb-4';
+
+            scoreEl.textContent = `${Math.round(score)}%`;
+
+            if (userProfile.monthlyIncome === 0) {
+                scoreEl.textContent = '--';
+                statusEl.classList.add('bg-gray-400');
+                statusEl.textContent = 'RISIKO: DATA BELUM LENGKAP';
+                messageEl.textContent = 'Masukkan Pemasukan Bulanan Bersih Anda di tab Anggaran untuk menghitung risiko FOMO.';
+                cardEl.classList.add('fomo-safe', 'border-opacity-50');
+                return;
+            }
+
+            if (score <= 80) {
+                // Aman: Pengeluaran Gaya Hidup < 80% dari target 30%
+                cardEl.classList.add('fomo-safe');
+                statusEl.classList.add('bg-green-600');
+                statusEl.textContent = 'RISIKO: AMAN';
+                messageEl.textContent = `Hebat! Pengeluaran Gaya Hidup Anda (${formatRupiah(dashboardData.wantsExpense)}) jauh di bawah target ideal. Pertahankan disiplin ini!`;
+            } else if (score > 80 && score <= 100) {
+                // Waspada: Pengeluaran Gaya Hidup mendekati/pas target 30%
+                cardEl.classList.add('fomo-warning');
+                statusEl.classList.add('bg-yellow-600');
+                statusEl.textContent = 'RISIKO: WASPADA';
+                messageEl.textContent = `Hati-hati! Pengeluaran Gaya Hidup Anda mendekati batas 30% (${formatRupiah(dashboardData.targetWants)}). Kurangi pengeluaran yang tidak penting.`;
+            } else {
+                // Kritis: Pengeluaran Gaya Hidup melebihi target 30%
+                cardEl.classList.add('fomo-critical');
+                statusEl.classList.add('bg-red-600');
+                statusEl.textContent = 'RISIKO: KRITIS';
+                messageEl.textContent = `**Bahaya FOMO!** Pengeluaran Gaya Hidup Anda melebihi target ideal. Segera tinjau ulang dan tekan pengeluaran Anda!`;
+            }
+        };
+
+        window.showFomoTips = () => {
+            const score = dashboardData.fomoRiskScore;
+            let title = "Tips Mengatasi FOMO";
+            let tipsContent = "";
+            
+            if (userProfile.monthlyIncome === 0) {
+                showModal('Tips Anti-FOMO', 'Harap masukkan Pemasukan Bulanan Bersih Anda terlebih dahulu untuk mendapatkan analisis dan tips yang relevan.');
+                return;
+            }
+
+            if (score <= 80) {
+                title = "Strategi Anti-FOMO Level Aman";
+                tipsContent = `
+                    <p class="mb-3">Selamat, Anda memiliki kontrol yang baik atas keuangan Anda. Pertahankan kedisiplinan ini dengan:</p>
+                    <ul class="list-disc pl-5 space-y-2 text-sm">
+                        <li>**Ubah Mindset:** Ingat, kekayaan sejati adalah apa yang Anda simpan, bukan apa yang Anda tunjukkan.</li>
+                        <li>**Review Target:** Evaluasi apakah 10% Tabungan/Investasi Anda sudah cukup agresif untuk tujuan jangka panjang.</li>
+                        <li>**"Jeda 24 Jam":** Sebelum membeli barang keinginan, tunggu 24 jam. Seringkali keinginan itu hilang dengan sendirinya.</li>
+                    </ul>
+                `;
+            } else if (score > 80 && score <= 100) {
+                title = "Strategi Anti-FOMO Level Waspada";
+                tipsContent = `
+                    <p class="mb-3">Anda mendekati batas ideal. Sedikit dorongan FOMO dapat merusak anggaran Anda. Fokus pada langkah-langkah ini:</p>
+                    <ul class="list-disc pl-5 space-y-2 text-sm">
+                        <li>**Identifikasi Pemicu:** Tentukan apa yang memicu pengeluaran Gaya Hidup berlebih Anda (media sosial, teman, iklan).</li>
+                        <li>**"Anggaran Nol":** Alokasikan setiap Rupiah. Jika ada sisa di kategori Gaya Hidup, segera pindahkan ke tabungan atau investasi.</li>
+                        <li>**Cari Alternatif Murah:** Jika ingin bersosialisasi (misal: nongkrong), pilih opsi yang lebih hemat biaya (masak di rumah teman, kopi seduh sendiri).</li>
+                    </ul>
+                `;
+            } else {
+                title = "Strategi Anti-FOMO Level KRITIS";
+                tipsContent = `
+                    <p class="mb-3">Pengeluaran Gaya Hidup Anda saat ini BERBAHAYA. Kita perlu segera mengambil tindakan untuk melindungi keuangan Anda:</p>
+                    <ul class="list-disc pl-5 space-y-2 text-sm">
+                        <li class="font-bold text-red-700">**Pembekuan Pengeluaran:** Lakukan 'No-Spend Challenge' selama 1-2 minggu ke depan, kecuali untuk kebutuhan pokok.</li>
+                        <li class="font-bold text-red-700">**Unfollow & Mute:** Hapus atau matikan notifikasi akun media sosial yang membuat Anda ingin membeli barang.</li>
+                        <li>**Bawa Uang Tunai Saja:** Untuk pengeluaran harian, bawa uang tunai sesuai batas. Tinggalkan kartu debit/kredit di rumah.</li>
+                        <li>**Prioritaskan Dana Darurat:** Pindahkan semua alokasi 'Gaya Hidup' sementara ke 'Dana Darurat' hingga skor risiko Anda turun.</li>
+                    </ul>
+                `;
+            }
+            
+            showModal(title, tipsContent, true); // true = isHtml
+        };
+
+
+        // 7. Chart Drawing Functions
+        const chartColors = [
+            '#3b82f6', // blue-500 (Kebutuhan)
+            '#f59e0b', // amber-500 (Gaya Hidup)
+            '#10b981', // green-500 (Tabungan)
+            '#6366f1', // indigo-500 (Investasi)
+        ];
+        
+        const drawIdealBudgetChart = () => {
+            if (idealBudgetChartInstance) idealBudgetChartInstance.destroy();
+            
+            const ctx = document.getElementById('idealBudgetChart').getContext('2d');
+            
+            const totalTarget = dashboardData.targetNeeds + dashboardData.targetWants + dashboardData.targetSavings + dashboardData.targetInvest;
+            const dataToShow = totalTarget > 0 ? [
+                dashboardData.targetNeeds,
+                dashboardData.targetWants,
+                dashboardData.targetSavings,
+                dashboardData.targetInvest,
+            ] : [1, 1, 1, 1]; // Placeholder if no income data
+
+            idealBudgetChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Kebutuhan (50%)', 'Gaya Hidup (30%)', 'Tabungan (10%)', 'Investasi (10%)'],
+                    datasets: [{
+                        data: dataToShow,
+                        backgroundColor: chartColors,
+                        hoverOffset: 4,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    if (label) {
+                                        let value = context.parsed;
+                                        return `${label}: ${formatRupiah(value)}`;
+                                    }
+                                    return label;
+                                }
+                            }
+                        },
+                    }
+                }
+            });
+        };
+
+        const drawRealizationChart = () => {
+            if (realizationChartInstance) realizationChartInstance.destroy();
+
+            const ctx = document.getElementById('realizationChart').getContext('2d');
+
+            realizationChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Kebutuhan', 'Gaya Hidup', 'Tabungan', 'Investasi'],
+                    datasets: [
+                        {
+                            label: 'Target Anggaran Ideal',
+                            data: [dashboardData.targetNeeds, dashboardData.targetWants, dashboardData.targetSavings, dashboardData.targetInvest],
+                            backgroundColor: '#93c5fd', // Light Blue (blue-300)
+                        },
+                        {
+                            label: 'Realisasi Pengeluaran/Alokasi',
+                            data: [dashboardData.needsExpense, dashboardData.wantsExpense, dashboardData.savings, dashboardData.savings * 0], // Savings is grouped, needs separation for invest
+                            backgroundColor: chartColors, // Use the specific colors for better mapping
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return formatRupiah(value);
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += formatRupiah(context.parsed.y);
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        };
+
+
+        // --- FIREBASE WRITE OPERATIONS (CRUD) ---
+        
+        // Save/Update User Profile
+        window.saveProfile = async (isDefault = false) => {
+            if (!userId) return showModal('Kesalahan', 'Autentikasi belum siap. Coba sebentar lagi.');
+
+            const income = parseInt(document.getElementById('monthly-income').value) || 0;
+            const months = parseInt(document.getElementById('emergency-months').value) || 6;
+            
+            if (!isDefault && (income < 0 || months <= 0)) {
+                return showModal('Input Salah', 'Pemasukan harus angka positif (atau nol jika belum punya), dan Target Bulan harus positif.');
+            }
+
+            const newProfile = {
+                monthlyIncome: income,
+                emergencyMonths: months,
+                updatedAt: new Date().toISOString(),
+            };
+
+            try {
+                const profileRef = getProfileDocRef();
+                await setDoc(profileRef, newProfile, { merge: true });
+                if (!isDefault) showModal('Berhasil!', 'Profil dan Anggaran berhasil disimpan.');
+            } catch (error) {
+                console.error("Error saving profile:", error);
+                showModal('Kesalahan Database', 'Gagal menyimpan profil: ' + error.message);
+            }
+        };
+
+        // Add a new Transaction
+        window.addTransaction = async () => {
+            if (!userId) return showModal('Kesalahan', 'Autentikasi belum siap.');
+            
+            const type = document.getElementById('transaction-type').value;
+            const category = document.getElementById('transaction-category').value;
+            const amount = parseInt(document.getElementById('transaction-amount').value) || 0;
+            const description = document.getElementById('transaction-description').value.trim();
+
+            if (amount <= 0) {
+                return showModal('Input Salah', 'Jumlah transaksi harus lebih dari nol.');
+            }
+            if (!description) {
+                return showModal('Input Salah', 'Deskripsi transaksi tidak boleh kosong.');
+            }
+
+            // Simple validation check for category/type pairing
+            if (type === 'income' && category !== 'pemasukan') {
+                 return showModal('Input Salah', 'Tipe Pemasukan hanya bisa menggunakan kategori "Gaji/Pemasukan".');
+            } else if ((type === 'expense' || type === 'saving') && category === 'pemasukan') {
+                 return showModal('Input Salah', `Tipe ${type} tidak bisa menggunakan kategori "Gaji/Pemasukan".`);
+            }
+            
+            const newTransaction = {
+                type: type, // income, expense, saving
+                category: category, // kebutuhan, gaya-hidup, tabungan, investasi, dana-darurat, pemasukan
+                amount: amount,
+                description: description,
+                timestamp: new Date(),
+            };
+
+            try {
+                const transactionsRef = getTransactionsCollectionRef();
+                await addDoc(transactionsRef, newTransaction);
+                showModal('Berhasil!', 'Transaksi berhasil ditambahkan.');
+                // Clear form
+                document.getElementById('transaction-amount').value = '';
+                document.getElementById('transaction-description').value = '';
+            } catch (error) {
+                console.error("Error adding transaction:", error);
+                showModal('Kesalahan Database', 'Gagal menambahkan transaksi: ' + error.message);
+            }
+        };
+
+        // Delete a Transaction
+        window.deleteTransaction = async (transactionId) => {
+            if (!userId) return showModal('Kesalahan', 'Autentikasi belum siap.');
+
+            // Use a custom modal replacement for confirm()
+            const confirmDelete = await new Promise(resolve => {
+                const modalEl = document.getElementById('app-modal');
+                document.getElementById('modal-title').textContent = 'Konfirmasi Hapus';
+                document.getElementById('modal-message').style.display = 'block'; // Ensure P is visible
+                document.getElementById('modal-message').textContent = 'Apakah Anda yakin ingin menghapus transaksi ini? Tindakan ini tidak dapat dibatalkan.';
+                
+                // Remove existing HTML content if any
+                const htmlContentEl = document.getElementById('modal-html-content');
+                if (htmlContentEl) htmlContentEl.remove();
+
+                // Change button to Confirm/Cancel pair
+                let buttonGroup = modalEl.querySelector('.flex.space-x-3');
+                if (!buttonGroup) {
+                    // If no button group exists, replace the single button with one
+                    const singleButton = modalEl.querySelector('button');
+                    if(singleButton) singleButton.remove();
+                    
+                    buttonGroup = document.createElement('div');
+                    buttonGroup.className = 'flex space-x-3';
+                    modalEl.querySelector('.p-6').appendChild(buttonGroup);
+                }
+                
+                buttonGroup.innerHTML = `
+                    <button id="cancel-btn" class="flex-1 bg-gray-300 text-gray-800 py-2 rounded-lg hover:bg-gray-400 transition">Batal</button>
+                    <button id="confirm-btn" class="flex-1 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition">Hapus</button>
+                `;
+
+                modalEl.classList.remove('hidden');
+                modalEl.classList.add('flex');
+
+                document.getElementById('cancel-btn').onclick = () => { closeModal(); resolve(false); };
+                document.getElementById('confirm-btn').onclick = () => { closeModal(); resolve(true); };
+            });
+
+            if (!confirmDelete) return;
+
+
+            try {
+                const transactionRef = doc(getTransactionsCollectionRef(), transactionId);
+                await deleteDoc(transactionRef);
+                showModal('Berhasil!', 'Transaksi berhasil dihapus.');
+            } catch (error) {
+                console.error("Error deleting transaction:", error);
+                showModal('Kesalahan Database', 'Gagal menghapus transaksi: ' + error.message);
+            }
+        };
+
+
+        // --- UI UTILITIES (View Switching, Mobile Menu) ---
+        
+        // Dynamic Category Filtering
+        document.getElementById('transaction-type').addEventListener('change', (e) => {
+            const type = e.target.value;
+            const categoryEl = document.getElementById('transaction-category');
+            
+            // Define all categories
+            const allCategories = [
+                { value: 'kebutuhan', text: 'Kebutuhan (50%)', types: ['expense'] },
+                { value: 'gaya-hidup', text: 'Gaya Hidup (30%)', types: ['expense'] },
+                { value: 'tabungan', text: 'Tabungan (10%)', types: ['saving'] },
+                { value: 'investasi', text: 'Investasi (10%)', types: ['saving'] },
+                { value: 'dana-darurat', text: 'Dana Darurat (Saving/Expense)', types: ['expense', 'saving'] },
+                { value: 'pemasukan', text: 'Gaji/Pemasukan', types: ['income'] },
+            ];
+
+            categoryEl.innerHTML = ''; // Clear options
+
+            allCategories
+                .filter(cat => cat.types.includes(type))
+                .forEach(cat => {
+                    const option = document.createElement('option');
+                    option.value = cat.value;
+                    option.textContent = cat.text;
+                    categoryEl.appendChild(option);
+                });
+            
+            // Select default if options exist
+            if (categoryEl.options.length > 0) {
+                 categoryEl.value = allCategories.filter(cat => cat.types.includes(type))[0].value;
+            }
+        });
+
+
+        // View Switching Logic
+        window.switchView = (viewId) => {
+            // Hide all views
+            document.querySelectorAll('.view').forEach(view => {
+                view.classList.add('hidden');
+            });
+            // Show the selected view
+            document.getElementById(`view-${viewId}`).classList.remove('hidden');
+
+            // Update navigation active state
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            document.getElementById(`nav-${viewId}`).classList.add('active');
+
+            // Close sidebar on mobile
+            if (window.innerWidth < 1024) {
+                document.getElementById('sidebar').classList.add('-translate-x-full');
+            }
+            
+            // Redraw charts when switching to dashboard to handle responsiveness
+            if (viewId === 'dashboard') {
+                calculateDashboardData();
+                updateUI();
+            }
+        };
+        
+        // Mobile Menu Toggle
+        document.getElementById('menu-button').addEventListener('click', () => {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('-translate-x-full');
+        });
+
+        // Initialize App on load
+        window.onload = () => {
+            initFirebase();
+            // Initial category filter setting
+            document.getElementById('transaction-type').dispatchEvent(new Event('change'));
+        };
+
+    </script>
+</body>
+</html>
