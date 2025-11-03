@@ -1,7 +1,19 @@
-// Global variables for Firebase access
-const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+// --- MULAI: KONFIGURASI FIREBASE ANDA ---
+// GANTI BAGIAN INI DENGAN KONFIGURASI DARI FIREBASE CONSOLE ANDA
+const firebaseConfig = {
+  apiKey: "SALIN_API_KEY_ANDA_DI_SINI",
+  authDomain: "SALIN_AUTH_DOMAIN_ANDA_DI_SINI",
+  projectId: "SALIN_PROJECT_ID_ANDA_DI_SINI",
+  storageBucket: "SALIN_STORAGE_BUCKET_ANDA_DI_SINI",
+  messagingSenderId: "SALIN_SENDER_ID_ANDA_DI_SINI",
+  appId: "SALIN_APP_ID_ANDA_DI_SINI"
+};
+// --- SELESAI: KONFIGURASI FIREBASE ANDA ---
+
+
+// Variabel global (sekarang mengambil dari firebaseConfig di atas)
+const appId = firebaseConfig.projectId; // Mengambil projectId dari config di atas
+const initialAuthToken = null; // Biarkan null untuk login anonim
 
 // Firebase Imports
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -107,6 +119,7 @@ const initFirebase = async () => {
         // Hides loading spinner
         document.getElementById('loading-overlay').classList.remove('hidden');
 
+        // PERBAIKAN: initializeApp sekarang menggunakan objek firebaseConfig yang Anda masukkan
         app = initializeApp(firebaseConfig);
         db = getFirestore(app);
         auth = getAuth(app);
@@ -147,7 +160,8 @@ const initFirebase = async () => {
 
     } catch (error) {
         console.error("Error during Firebase initialization or sign-in:", error);
-        showModal('Kesalahan Fatal', `Gagal menginisialisasi Firebase: ${error.message}. Periksa koneksi Anda.`);
+        // Error akan tetap muncul di sini jika projectId Anda salah
+        showModal('Kesalahan Fatal', `Gagal menginisialisasi Firebase: ${error.message}. Periksa koneksi dan konfigurasi Anda.`);
     }
 };
 
@@ -221,8 +235,8 @@ const setupDataListeners = () => {
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
     
     const qMonth = query(transactionsRef, 
-                        where("timestamp", ">=", startOfMonth), 
-                        orderBy("timestamp", "desc"));
+                                where("timestamp", ">=", startOfMonth), 
+                                orderBy("timestamp", "desc"));
 
     onSnapshot(qMonth, (querySnapshot) => {
         transactions = [];
