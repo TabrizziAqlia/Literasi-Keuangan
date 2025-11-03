@@ -1,0 +1,59 @@
+/* Menggunakan font Inter secara default */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f7f9fb;
+}
+
+/* Styling dasar untuk tampilan dashboard */
+.container-wrapper {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 1rem;
+}
+.main-content {
+    transition: margin-left 0.3s;
+}
+.nav-item.active {
+    background-color: #3b82f6; /* Tailwind blue-500 */
+    color: white;
+    font-weight: 600;
+}
+.nav-item {
+    cursor: pointer;
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    border-radius: 0.5rem;
+    transition: all 0.2s;
+}
+.nav-item:hover {
+    background-color: #e0f2fe; /* Tailwind blue-100 */
+}
+
+/* Skema Warna Kategori (Pastikan warna ini konsisten di JS Chart) */
+.color-primer-kebutuhan { background-color: #3b82f6; } /* Biru */
+.color-primer-gaya-hidup { background-color: #f59e0b; } /* Kuning/Amber */
+.color-primer-tabungan { background-color: #10b981; } /* Hijau */
+.color-primer-investasi { background-color: #6366f1; } /* Indigo */
+.color-primer-dana-darurat { background-color: #ef4444; } /* Merah */
+.color-primer-pemasukan { background-color: #059669; } /* Hijau gelap */
+
+/* Custom scrollbar for better look */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* New Styles for Anti-FOMO Card */
+.fomo-safe { border-color: #10b981; background-color: #ecfdf5; }
+.fomo-warning { border-color: #f59e0b; background-color: #fffbeb; }
+.fomo-critical { border-color: #ef4444; background-color: #fef2f2; }
